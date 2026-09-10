@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第一课：让 Godot 图标动起来</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+  <p class="eyebrow">Lesson 0001 · Godot 4 · 2D</p>
+  <h1>让 Godot 图标动起来</h1>
+  <p class="lead">今天只做一件事：用方向键或 WASD 控制 Godot 图标八方向移动。完成后，你会拥有第一个可玩的场景。</p>
+  <div class="meta"><span>预计 15–25 分钟</span><span>成果：可运行移动 Demo</span><span>语言：GDScript</span></div>
+
+  <div class="checkpoint">
+    <strong>完成标准</strong>
+    <p>角色可向四个基本方向及四个对角方向移动；松开按键后立刻停止；对角移动不会更快。</p>
+  </div>
+
+  <h2>1. 先建立正确模型</h2>
+  <p>Godot 用“小节点组合”构成对象。角色不是一个包办所有职责的大类，而是一棵节点树。官方文档把节点称为游戏的基本构件，把保存后的节点树称为场景。参见 <a href="https://docs.godotengine.org/en/stable/getting_started/step_by_step/nodes_and_scenes.html">Nodes and Scenes</a>。</p>
+  <div class="tree">Player (CharacterBody2D)   ← 移动与碰撞
+├── Sprite2D                ← 显示图像
+└── CollisionShape2D        ← 定义碰撞形状</div>
+
+  <div class="java-map">
+    <div>Java：一个类通过依赖对象获得能力</div><div class="arrow">→</div><div>Godot：一个场景通过子节点组合能力</div>
+  </div>
+
+  <h2>2. 创建项目与角色场景</h2>
+  <ol>
+    <li>若尚未安装，从 <a href="https://godotengine.org/download/">Godot 官方下载页</a>取得当前稳定版标准编辑器。</li>
+    <li>新建项目，建议目录为本工作区下的 <code>demo/character-movement</code>。渲染器保持默认即可。</li>
+    <li>点击 <em>Other Node</em>，创建根节点 <code>CharacterBody2D</code>，重命名为 <code>Player</code>。</li>
+    <li>给 <code>Player</code> 添加两个子节点：<code>Sprite2D</code> 与 <code>CollisionShape2D</code>。</li>
+    <li>把项目自带的 <code>icon.svg</code> 拖到 <code>Sprite2D</code> 的 <em>Texture</em>。</li>
+    <li>在 <code>CollisionShape2D</code> 的 <em>Shape</em> 新建 <code>CircleShape2D</code>，让圆大致包住图标。</li>
+    <li>保存场景为 <code>player.tscn</code>。</li>
+  </ol>
+
+  <div class="checkpoint"><strong>立即验证</strong><p>场景树应与上图一致，而且 2D 视图中能看到图标。看不到时，先检查 <code>Sprite2D.Texture</code>，不要继续写代码。</p></div>
+
+  <h2>3. 用“动作”描述输入</h2>
+  <p>打开 <em>Project → Project Settings → Input Map</em>，添加四个动作，并分别绑定方向键与 WASD：</p>
+  <ul>
+    <li><code>move_left</code>：Left、A</li>
+    <li><code>move_right</code>：Right、D</li>
+    <li><code>move_up</code>：Up、W</li>
+    <li><code>move_down</code>：Down、S</li>
+  </ul>
+  <p>代码读取“向左移动”这个意图，而不是硬编码 A 键。日后换手柄时，移动代码不必改变。</p>
+
+  <h2>4. 附着移动脚本</h2>
+  <p>选中 <code>Player</code>，点击 <em>Attach Script</em>，保存为 <code>player.gd</code>，替换为：</p>
+  <pre><code>extends CharacterBody2D
+
+@export var speed: float = 300.0
+
+func _physics_process(_delta: float) -> void:
+    var direction := Input.get_vector(
+        "move_left",
+        "move_right",
+        "move_up",
+        "move_down"
+    )
+    velocity = direction * speed
+    move_and_slide()</code></pre>
+
+  <h3>逐行理解，而不是背诵</h3>
+  <div class="card">
+    <p><code>extends CharacterBody2D</code>：脚本继承角色身体，因此直接拥有 <code>velocity</code> 与 <code>move_and_slide()</code>。</p>
+    <p><code>@export</code>：让速度出现在 Inspector 中。它类似可由工具配置的字段。</p>
+    <p><code>_physics_process</code>：引擎按固定物理节奏调用的回调。不是你主动调用它。</p>
+    <p><code>Input.get_vector()</code>：把四个输入动作合成为长度不超过 1 的方向向量，所以斜向移动不会额外加速。</p>
+    <p><code>move_and_slide()</code>：使用当前 <code>velocity</code> 移动身体，并处理滑动碰撞。它已按物理步长处理移动。</p>
+  </div>
+  <p>这套写法来自 Godot 官方的 <a href="https://docs.godotengine.org/en/stable/tutorials/2d/2d_movement.html">2D movement overview</a>。</p>
+
+  <h2>5. 运行并做一次有意的实验</h2>
+  <ol>
+    <li>运行当前场景。若 Godot 要求主场景，选择当前的 <code>player.tscn</code>。</li>
+    <li>同时按 W 与 D，确认能斜向移动。</li>
+    <li>运行中停止，选中 <code>Player</code>，把 Inspector 中的 <em>Speed</em> 改成 <code>100</code>，再次运行。</li>
+  </ol>
+  <p>这个实验验证了：脚本声明行为，场景保存配置，两者共同构成可复用角色。</p>
+
+  <h2>6. 不看代码，先回答</h2>
+  <section class="quiz" data-quiz data-correct="true" data-success="正确。引擎负责调用这个生命周期方法。" data-retry="再想一下：代码中没有任何地方主动调用它。">
+    <p><strong>判断：</strong><code>_physics_process()</code> 由 Godot 引擎定期调用。</p>
+    <button data-answer="true">正确</button><button data-answer="false">错误</button>
+    <p class="feedback" aria-live="polite"></p>
+  </section>
+  <section class="quiz" data-quiz data-correct="false" data-success="正确。动作名称把游戏意图与具体设备解耦。" data-retry="再想一下：Input Map 正是为了避免把具体按键写死。">
+    <p><strong>判断：</strong>移动脚本应该直接检查 W 键，而不是读取输入动作。</p>
+    <button data-answer="true">正确</button><button data-answer="false">错误</button>
+    <p class="feedback" aria-live="polite"></p>
+  </section>
+
+  <h2>最后的检索练习</h2>
+  <p>关闭本页和脚本，尝试只凭记忆说出这条流水线的四步，然后再回来核对：</p>
+  <pre><code>输入动作 → 方向向量 → velocity → move_and_slide()</code></pre>
+  <p>需要术语提醒时，打开 <a href="../reference/godot-foundations.html">Godot 基础速查</a>。</p>
+
+  <div class="next">
+    <strong>完成后告诉我三件事：</strong>
+    <p>Demo 是否成功运行；两道判断题的答案；以及你如何用自己的话解释 <code>Input.get_vector()</code>。我会据此判断下一课是先补概念，还是加入屏幕边界与加速度。</p>
+    <p>任何步骤不清楚都可以直接问我。请附上报错文字或场景树截图，我会帮你定位。</p>
+  </div>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

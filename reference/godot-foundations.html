@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Godot 基础速查</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+  <p class="eyebrow">Reference · Godot 4</p>
+  <h1>Godot 基础速查</h1>
+  <p class="lead">从 Java 开发者的视角，压缩 Godot 最重要的几个概念。</p>
+
+  <h2>核心词汇</h2>
+  <div class="card">
+    <p><strong>节点 Node</strong>：只负责一种能力的运行时对象。显示、碰撞、摄像机、音频通常由不同节点承担。</p>
+    <p><strong>场景 Scene</strong>：一棵保存到磁盘的节点树。场景可被实例化和组合，像项目自定义的新节点类型。</p>
+    <p><strong>场景树 SceneTree</strong>：当前正在运行的全部节点形成的树。节点进入树后才参与生命周期。</p>
+    <p><strong>脚本 Script</strong>：附着到节点，为该节点增加状态与行为。首行 <code>extends</code> 决定脚本继承的节点类型。</p>
+    <p><strong>输入动作 Input Action</strong>：业务含义明确的输入名称，例如 <code>move_left</code>。键盘键只是它的绑定。</p>
+  </div>
+
+  <h2>Java 类比：只作桥梁</h2>
+  <div class="java-map">
+    <div><code>extends CharacterBody2D</code></div><div class="arrow">→</div><div>类似继承引擎基类</div>
+    <div><code>func _physics_process(delta)</code></div><div class="arrow">→</div><div>类似框架定期调用的回调</div>
+    <div><code>@export var speed</code></div><div class="arrow">→</div><div>类似可由编辑器配置的字段</div>
+  </div>
+  <p>重要区别：场景不是 Java 类文件，节点树也不是普通对象图。它们由引擎加载、挂接并调度。</p>
+
+  <h2>本课程的移动流水线</h2>
+  <pre><code>输入动作 → 方向向量 → velocity → move_and_slide()</code></pre>
+
+  <p class="next"><a href="../lessons/0001-move-the-icon.html">返回第一课：让 Godot 图标动起来</a></p>
+</main>
+</body>
+</html>
