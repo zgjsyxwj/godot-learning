@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第二课：把角色留在屏幕内</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+  <p class="eyebrow">Lesson 0002 · Godot 4 · 2D</p>
+  <h1>把角色留在屏幕内</h1>
+  <p class="lead">今天只做一件事：限制角色的位置，让整个 Godot 图标始终留在窗口内。</p>
+  <div class="meta"><span>预计 10–20 分钟</span><span>成果：带屏幕边界的移动 Demo</span><span>语言：GDScript</span></div>
+
+  <div class="checkpoint">
+    <strong>完成标准</strong>
+    <p>角色仍能八方向移动；推向窗口任意边缘时会停住；图标不会有一部分跑到窗口外。</p>
+  </div>
+
+  <h2>1. 从上一课的输入向量开始</h2>
+  <p>同时按 W 和 D 时，<code>Input.get_vector()</code> 返回的方向大约是 <code>(0.707, -0.707)</code>。它的长度约为 1，所以斜向移动不会比横向移动更快。</p>
+  <p>这一课不改输入和速度。移动完成后，我们只修正最终的 <code>position</code>。</p>
+
+  <h2>2. 建立屏幕坐标模型</h2>
+  <p>Godot 2D 窗口的坐标原点位于左上角。X 向右增大，Y 向下增大：</p>
+  <div class="tree">(0, 0) ───────────────→ X
+  │  ┌───────────────────┐
+  │  │                   │
+  │  │       Player      │
+  │  │                   │
+  ↓  └───────────────────┘
+  Y              viewport.size</div>
+
+  <div class="java-map">
+    <div><code>position</code> 是角色中心</div><div class="arrow">→</div><div>边界必须预留半个图标</div>
+  </div>
+
+  <p>当前图标是 128 × 128 像素，所以中心至少要离左边和上边 64 像素。窗口右边和下边也要减去 64 像素。</p>
+  <pre><code>最小位置 = (64, 64)
+最大位置 = 窗口尺寸 - (64, 64)</code></pre>
+
+  <h2>3. 让节点自己提供尺寸</h2>
+  <p>不要在脚本里重复写 <code>64</code>。直接从 <code>Sprite2D</code> 的纹理读取尺寸：</p>
+  <pre><code>@onready var half_size: Vector2 = $Sprite2D.texture.get_size() / 2.0</code></pre>
+
+  <div class="card">
+    <p><code>$Sprite2D</code>：取得当前节点下名为 <code>Sprite2D</code> 的子节点。</p>
+    <p><code>texture.get_size()</code>：读取纹理的完整尺寸，当前结果为 <code>(128, 128)</code>。</p>
+    <p><code>@onready</code>：等节点和子节点都准备好后，再计算这个值。</p>
+  </div>
+
+  <h2>4. 移动后限制位置</h2>
+  <p>把 <code>player.gd</code> 改为：</p>
+  <pre><code>extends CharacterBody2D
+
+@export var speed: float = 300.0
+@onready var half_size: Vector2 = $Sprite2D.texture.get_size() / 2.0
+
+func _physics_process(_delta: float) -> void:
+    var direction := Input.get_vector(
+        "move_left",
+        "move_right",
+        "move_up",
+        "move_down"
+    )
+    velocity = direction * speed
+    move_and_slide()
+
+    position = position.clamp(
+        half_size,
+        get_viewport_rect().size - half_size
+    )</code></pre>
+
+  <p><code>Vector2.clamp(min, max)</code> 分别限制 X 和 Y。小于最小值时取最小值，大于最大值时取最大值，中间的值保持不变。</p>
+
+  <div class="checkpoint">
+    <strong>注意执行顺序</strong>
+    <p>先调用 <code>move_and_slide()</code>，再限制 <code>position</code>。这样每次物理更新都先计算移动结果，然后把越界的位置拉回合法范围。</p>
+  </div>
+
+  <h2>5. 运行三个实验</h2>
+  <ol>
+    <li>运行场景，把角色分别推向窗口的四条边，确认整个图标始终可见。</li>
+    <li>把角色推向右下角，确认 X 和 Y 可以同时到达各自的最大值。</li>
+    <li>运行时调整窗口大小，再推向边缘，确认边界会跟随当前窗口尺寸。</li>
+  </ol>
+
+  <p>如果图标仍有一半跑出窗口，通常是把角色中心限制在 <code>0</code> 到窗口尺寸之间，却没有预留 <code>half_size</code>。</p>
+
+  <h2>6. 不看代码，先回答</h2>
+  <section class="quiz" data-quiz data-correct="false" data-success="正确。position 表示图标中心，0 会让一半图标处于窗口外。" data-retry="再想一下：图标以 position 为中心向四周展开。">
+    <p><strong>判断：</strong>要让整个图标可见，X 的最小值应该是 <code>0</code>。</p>
+    <button data-answer="true">正确</button><button data-answer="false">错误</button>
+    <p class="feedback" aria-live="polite"></p>
+  </section>
+
+  <section class="quiz" data-quiz data-correct="true" data-success="正确。这样纹理尺寸改变后，边界仍会自动匹配。" data-retry="再想一下：脚本已经能从 Sprite2D 的纹理取得真实尺寸。">
+    <p><strong>判断：</strong>从纹理计算 <code>half_size</code> 比固定写成 <code>Vector2(64, 64)</code> 更可靠。</p>
+    <button data-answer="true">正确</button><button data-answer="false">错误</button>
+    <p class="feedback" aria-live="polite"></p>
+  </section>
+
+  <h2>最后的检索练习</h2>
+  <p>关闭脚本，尝试凭记忆说出这一课新增的流水线，然后再回来核对：</p>
+  <pre><code>读取纹理尺寸 → 计算半尺寸 → 完成移动 → 限制 position</code></pre>
+
+  <div class="next">
+    <strong>完成后告诉我三件事：</strong>
+    <p>角色是否能在四条边和四个角正确停住；两道判断题的答案；以及为什么边界要使用半个图标的尺寸。</p>
+    <p><a href="0001-move-the-icon.html">返回第一课</a></p>
+  </div>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
