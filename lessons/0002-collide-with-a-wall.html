@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第二课：让墙挡住角色</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body><main>
+<nav aria-label="课程导航"><a href="0001-move-the-icon.html">第一课</a> · <a href="../reference/godot-foundations.html#collision">碰撞速查</a></nav>
+<h1>让墙挡住角色</h1>
+<p class="lead">给已运行的八方向移动 Demo 加一面墙：正面撞上会停住，斜着撞上会沿墙滑动。</p>
+<div class="meta"><span>第二课 · 约 10 分钟</span><span>Godot 4 · GDScript</span></div>
+
+<h2>先预测，再动手</h2>
+<section class="quiz" data-quiz data-correct="false" data-success="正确。get_vector() 限制长度，不超过 1；不是给斜向额外加速。" data-retry="回想第一课：(1, 1) 的长度是 √2，get_vector() 会限制它。">
+<p>不看脚本：同样的 Speed，同时按 W 和 D 会比只按 D 快约 41%。</p>
+<button data-answer="true">正确</button><button data-answer="false">错误</button><p class="feedback" aria-live="polite"></p>
+</section>
+
+<h2>1. 四个角色，各管一件事</h2>
+<div class="tree" role="img" aria-label="World 下的 Player 与 Wall 是同级节点，各自拥有直接子节点 CollisionShape2D">World (Node2D)
+├── Player (CharacterBody2D) ← 执行角色移动
+│   ├── Sprite2D            ← 显示图标
+│   └── CollisionShape2D    ← 角色的碰撞轮廓
+└── Wall (StaticBody2D)     ← 静态障碍物
+    └── CollisionShape2D   ← 墙的碰撞轮廓</div>
+<p><code>CharacterBody2D</code> 提供角色移动接口；<code>StaticBody2D</code> 适合这面不动的墙。<code>CollisionShape2D</code> 把形状提供给直接父级碰撞对象。形状描述“边界在哪里”，身体决定“如何参与碰撞”。参见 <a href="https://docs.godotengine.org/en/stable/classes/class_staticbody2d.html">StaticBody2D</a> 与 <a href="https://docs.godotengine.org/en/stable/classes/class_collisionshape2d.html">CollisionShape2D</a>。</p>
+<p><code>move_and_slide()</code> 使用 <code>velocity</code> 移动角色，并处理碰撞。正面没有可走的方向就停住；斜着碰到平直墙面时可以沿墙移动。不要改成直接写 <code>position</code>。官方教程：<a href="https://docs.godotengine.org/en/stable/tutorials/physics/using_character_body_2d.html#movement-and-collision">移动与碰撞</a>。</p>
+
+<h2>2. 在现有项目中搭一面墙</h2>
+<p>打开已有的 <code>godot-learning/project.godot</code>。保留第一课的 <code>player.tscn</code> 与输入动作。</p>
+<ol>
+<li>新建场景，根节点选 <code>Node2D</code>，命名为 <code>World</code>，保存为 <code>world.tscn</code>。</li>
+<li>把文件系统面板里的 <code>player.tscn</code> 拖到 World 下，创建场景实例。选中这个 Player，把 <em>Transform → Position</em> 设为 <code>(180, 300)</code>。</li>
+<li>仍选中 Player，把 <em>Motion Mode</em> 改为 <code>Floating</code>。这是俯视移动：不区分地板与天花板，碰撞都按墙处理。参见 <a href="https://docs.godotengine.org/en/stable/classes/class_characterbody2d.html#enum-characterbody2d-motionmode">官方移动模式说明</a>。</li>
+<li>选中 World，添加 <code>StaticBody2D</code>，命名为 <code>Wall</code>。Position 设为 <code>(500, 300)</code>。Wall 与 Player 必须同级。</li>
+<li>给 Wall 添加直接子节点 <code>CollisionShape2D</code>。在 <em>Shape</em> 新建 <code>RectangleShape2D</code>，展开资源，把 <em>Size</em> 设为 <code>(40, 500)</code>。子节点 Position 保持 <code>(0, 0)</code>，Scale 保持 <code>(1, 1)</code>。</li>
+<li>确认 Player 原有的 Shape 不为空。两边的 <em>Disabled</em> 都关闭。Player 与 Wall 的 <em>Collision → Layer / Mask</em> 都只勾选第 1 层，便于本课验证。</li>
+</ol>
+<p>这面墙没有美术节点。运行前开启编辑器的 <em>Debug → Visible Collision Shapes</em>（显示碰撞形状）。形状平时不作为游戏画面显示；调试视图用来观察真实边界。</p>
+
+<h2>3. 移动代码保持这条流水线</h2>
+<p>第一课脚本已经足够。核对下面两行仍在 <code>_physics_process()</code> 中，且顺序一致：</p>
+<pre><code>velocity = direction * speed
+move_and_slide()</code></pre>
+<p><code>velocity</code> 的单位是像素/秒，不要再乘 <code>delta</code>。<code>move_and_slide()</code> 内部处理物理步长，也可能因碰撞修改速度；每个物理步再按输入设置速度。参见 <a href="https://docs.godotengine.org/en/stable/classes/class_characterbody2d.html#class-characterbody2d-property-velocity">velocity</a> 与 <a href="https://docs.godotengine.org/en/stable/classes/class_characterbody2d.html#class-characterbody2d-method-move-and-slide">move_and_slide()</a>。</p>
+
+<h2>4. 运行，立刻看结果</h2>
+<p>保存 World，点击<strong>运行当前场景</strong>（F6；部分 Mac 键盘需 Fn）。这次必须运行 World。F5 可能仍会运行第一课的 Player。</p>
+<ol>
+<li><strong>按住 D：</strong>角色向右撞到墙的左侧，应停住。碰撞轮廓不能穿墙。</li>
+<li><strong>保持 D，再按 W 约半秒：</strong>角色应沿墙向上滑动。不要一直按到墙顶；离开墙的端点后可以绕过去。</li>
+<li><strong>松开全部按键：</strong>角色应立即停止。重新运行当前场景可回到起点。</li>
+</ol>
+<details><summary>结果不对？按现象检查</summary>
+<ul>
+<li>没有墙：先检查运行的是 World，以及“显示碰撞形状”是否开启。</li>
+<li>穿墙：检查两边的 Shape、Disabled 和 Layer / Mask，再确认调用了 move_and_slide()。</li>
+<li>墙跟着角色走：Wall 应挂在 World 下，不能挂在 Player 下。</li>
+<li>图标还没碰墙就停了：对照调试轮廓。你当前圆形半径约 87.3，比图标边缘更宽；这是形状决定碰撞的直接证据。</li>
+</ul></details>
+
+<h2>合上讲解，再检索</h2>
+<section class="quiz" data-quiz data-correct="false" data-success="正确。Sprite2D 负责显示。墙要有 StaticBody2D 和有效的 CollisionShape2D。" data-retry="先分清显示和碰撞：图片本身没有定义碰撞边界。">
+<p>只添加一张墙的图片，不添加碰撞身体和形状，也能挡住角色。</p><button data-answer="true">正确</button><button data-answer="false">错误</button><p class="feedback" aria-live="polite"></p>
+</section>
+<section class="quiz" data-quiz data-correct="true" data-success="正确。设置 velocity 表达移动意图，move_and_slide() 执行带碰撞处理的移动。" data-retry="只设置速度还不会完成移动。回想第一课的最后一行。">
+<p>角色有碰撞形状后，仍需要调用 move_and_slide() 来执行本课的移动。</p><button data-answer="true">正确</button><button data-answer="false">错误</button><p class="feedback" aria-live="polite"></p>
+</section>
+<p>离开本页，凭记忆画出 Player 与 Wall 的节点树，并说出：形状属于谁，谁调用移动方法。</p>
+<details><summary>说完再核对</summary><p>World 包含同级的 Player 和 Wall。Player 是 CharacterBody2D，Wall 是 StaticBody2D；各有直接子节点 CollisionShape2D。Player 的脚本调用 move_and_slide()。</p></details>
+<p><strong>明天用 1 分钟：</strong>不看本页，在 World 中再添加一面横墙，预测碰撞结果，再运行验证。</p>
+<div class="next">
+<p><strong>完成后告诉我：</strong>正面碰撞是否停住、斜向碰撞是否滑动，以及“只有 CollisionShape2D 为什么还不够”。我会根据你的实际结果记录掌握情况。</p>
+<p>不清楚就直接问我；报错请贴原文。首选延伸阅读：<a href="https://docs.godotengine.org/en/stable/tutorials/physics/using_character_body_2d.html">官方 Using CharacterBody2D</a>，先读 Movement and collision 与 move_and_slide，跳过平台跳跃部分。</p>
+<p><a href="0001-move-the-icon.html">返回第一课</a> · <a href="../reference/godot-foundations.html#collision">打开碰撞速查</a></p>
+</div>
+</main><script src="../assets/quiz.js"></script></body></html>

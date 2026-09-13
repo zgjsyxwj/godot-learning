@@ -32,6 +32,16 @@
   <h2>本课程的移动流水线</h2>
   <pre><code>输入动作 → 方向向量 → velocity → move_and_slide()</code></pre>
 
+  <h2 id="collision">碰撞：第二课速查</h2>
+  <dl>
+    <dt><code>CharacterBody2D</code></dt><dd>由脚本控制的角色身体。用 velocity 表达速度，用 move_and_slide() 执行移动。</dd>
+    <dt><code>StaticBody2D</code></dt><dd>本课的不动墙壁。作为障碍物参与碰撞。</dd>
+    <dt><code>CollisionShape2D</code></dt><dd>直接挂在碰撞对象下。Shape 资源定义轮廓；图片不决定碰撞边界。</dd>
+    <dt><code>Floating</code></dt><dd>俯视移动模式。所有碰撞按墙处理，适合本课八方向移动。</dd>
+  </dl>
+  <p>最小组合：角色身体 + 角色形状；静态身体 + 墙形状；匹配的碰撞层与掩码；在物理回调中调用移动方法。</p>
+  <p>先输入，再设置 velocity，最后 move_and_slide()。速度单位是像素/秒，不乘 delta。</p>
+  <p>依据：<a href="https://docs.godotengine.org/en/stable/tutorials/physics/using_character_body_2d.html">官方角色碰撞教程</a>。<a href="../lessons/0002-collide-with-a-wall.html">返回第二课：让墙挡住角色</a>。</p>
   <p class="next"><a href="../lessons/0001-move-the-icon.html">返回第一课：让 Godot 图标动起来</a></p>
 </main>
 </body>
