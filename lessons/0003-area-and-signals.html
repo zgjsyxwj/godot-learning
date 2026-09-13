@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第三课：进入区域，触发事件</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body><main>
+<nav aria-label="课程导航"><a href="0002-collide-with-a-wall.html">第二课</a></nav>
+<h1>进入区域，触发事件</h1>
+<p class="lead">给 World 添加一个可穿过的触发区域。角色进入时输出提示，停留时不重复输出，离开后再进入会再次输出。</p>
+<div class="meta"><span>第三课 · 约 10 分钟</span><span>面向有经验的 Java 开发者</span></div>
+
+<h2>1. 从事件监听理解信号</h2>
+<p>上一课的 StaticBody2D 阻挡角色；本课的 Area2D 检测重叠，不充当实体墙。两者都用 CollisionShape2D 定义边界。引擎发现角色进入区域后，Area2D 发出 body_entered 信号，已连接的方法接收进入者。</p>
+<div class="java-map"><div>Java：注册事件监听器<br><code>addListener(this::onEntered)</code></div><div class="arrow">→</div><div>Godot：连接信号<br><code>body_entered.connect(handler)</code></div></div>
+<p>这是观察者模式的类比。信号由 Godot 对象系统提供，不需要自行定义 Listener 接口。默认连接直接调用接收方法，不能据此假定有消息队列、后台线程或异步执行。</p>
+<p>本课由 World 连接子节点：区域负责检测，World 决定进入区域意味着什么。Player 的移动脚本无需知道区域的存在。</p>
+
+<h2>2. 添加一个触发区域</h2>
+<p>打开现有 <code>godot-learning/world.tscn</code>，添加以下节点。保留 Player 与 Wall。</p>
+<div class="tree" role="img" aria-label="World 下新增 Trigger，Trigger 的直接子节点为 CollisionShape2D">World (Node2D) ← 本课附加 world.gd
+├── Player (CharacterBody2D)
+├── Wall (StaticBody2D)
+└── Trigger (Area2D)
+    └── CollisionShape2D</div>
+<ol>
+<li>在 World 下新增 Area2D，命名为 <code>Trigger</code>，Position 设为 <code>(180, 100)</code>。</li>
+<li>为 Trigger 添加直接子节点 CollisionShape2D。新建 RectangleShape2D，Size 设为 <code>(120, 60)</code>。子节点 Position 保持 <code>(0, 0)</code>，Disabled 关闭。</li>
+<li>Trigger 的 Collision Layer 全部取消，Collision Mask 只勾选第 1 层，Monitoring 开启。Player 的 Collision Layer 保留第 1 层。</li>
+<li>开启 Debug → Visible Collision Shapes，以便运行时看见区域边界。</li>
+</ol>
+<p><strong>Layer 表示“我在哪些层”，Mask 表示“我要检测哪些层”。</strong>这里由 Trigger 的 Mask 匹配 Player 的 Layer。Trigger 自己可以不占任何层；Player 也不需要为了这个检测修改 Mask。Wall 同样在第 1 层，所以接收方法还会识别具体进入者。</p>
+<p>你当前 Player 位于约 <code>(163, 283)</code>，圆形碰撞半径约 87.3。这个区域在出生点上方，初始不会重叠。按 W 接近它即可；当碰撞形状重叠时就会触发，不必等角色中心进入。</p>
+
+<h2>3. 让 World 订阅事件</h2>
+<p>给 World 根节点附加 <code>res://world.gd</code>，内容如下。本课只通过代码连接信号，无需在编辑器信号面板再连接一次。</p>
+<pre><code>extends Node2D
+
+@onready var player: CharacterBody2D = $Player
+@onready var trigger: Area2D = $Trigger
+
+func _ready() -> void:
+    trigger.body_entered.connect(_on_trigger_body_entered)
+
+func _on_trigger_body_entered(body: Node2D) -> void:
+    if body == player:
+        print("角色进入触发区域")</code></pre>
+<p><code>$Player</code> 是相对当前节点的 <code>get_node("Player")</code> 简写。它依赖场景中的节点路径和名称，不是 Java 字段自动注入。</p>
+<p><code>@onready</code> 把引用初始化推迟到节点准备就绪时，在本节点的 <code>_ready()</code> 前执行。World 的子节点会先完成各自的 ready 阶段，然后 World 执行 <code>_ready()</code>，此时连接子节点信号。把它理解为场景生命周期中的初始化回调，比把它当 Java 构造器更准确。</p>
+<p><code>connect()</code> 接收方法对应的 Callable。传入方法名，不加调用括号。<code>body</code> 是信号携带的实际进入者；<code>body == player</code> 判断是否为这个 Player 实例，不靠节点名称猜测身份。</p>
+<p>事件链：物理步检测到重叠开始 → Trigger 发出 body_entered → World 的接收方法执行 → 确认进入者 → 输出提示。无需在 Player 的每帧回调中轮询区域。</p>
+
+<h2>4. 验证事件的触发时机</h2>
+<ol>
+<li>保存，按 F6 运行 World，打开编辑器 Output（输出）面板。</li>
+<li>按 W 接近上方区域。出现“角色进入触发区域”，角色仍能继续穿过。</li>
+<li>在形状重叠时松开按键，等两秒。输出不应继续增加。</li>
+<li>按 S 回到出生点，确保碰撞形状完全离开，再按 W 进入。提示应新增一次。</li>
+<li>再次向右撞墙，确认第二课的墙仍会阻挡角色。</li>
+</ol>
+<details><summary>按现象排查</summary><ul>
+<li>提示找不到节点：脚本应挂在 World，Player 和 Trigger 应为它的直接子节点，名称大小写一致。</li>
+<li>能穿过但没有输出：检查 Trigger 的 Monitoring、Mask 第 1 层、Player 的 Layer 第 1 层，以及双方 Shape 是否有效。确认运行的是 World。</li>
+<li>回调选择错误：CharacterBody2D 对应 body_entered；area_entered 用于另一个 Area2D。</li>
+<li>停留不再输出：这是预期行为。body_entered 表示“开始重叠”，不是“每个物理步仍在重叠”。</li>
+</ul></details>
+
+<h2>合上讲解，再检索</h2>
+<section class="quiz" data-quiz data-correct="false" data-success="正确。信号连接的是方法引用，加括号会立即调用方法。" data-retry="回想 Java 的 this::onEntered 与 onEntered() 的区别。">
+<p>connect() 应传入 _on_trigger_body_entered()，用括号调用接收方法。</p><button data-answer="true">正确</button><button data-answer="false">错误</button><p class="feedback" aria-live="polite"></p>
+</section>
+<p>只改配置：取消 Trigger 的 Mask 第 1 层，预测结果后运行。然后恢复。你应该能解释为什么区域仍可显示，却不再检测到 Player。</p>
+<div class="next"><p><strong>完成后告诉我：</strong>是否能穿过区域、停留时是否只输出一次，以及为何用 body_entered 而不是 area_entered。</p>
+<p>可选阅读：<a href="https://docs.godotengine.org/en/stable/classes/class_area2d.html">Area2D：body_entered、Monitoring 与 Mask</a> · <a href="https://docs.godotengine.org/en/stable/getting_started/step_by_step/signals.html">官方信号教程</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-private-method-ready">Node 的 ready 生命周期</a>。</p></div>
+</main><script src="../assets/quiz.js"></script></body></html>
