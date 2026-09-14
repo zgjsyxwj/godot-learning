@@ -27,3 +27,10 @@ position = Vector2(180, 100)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Trigger" unique_id=1517826043]
 shape = SubResource("RectangleShape2D_v1jvj")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1104175552]
+
+[node name="StatusLabel" type="Label" parent="HUD" unique_id=1677394591]
+offset_right = 40.0
+offset_bottom = 23.0
+text = "区域外"
