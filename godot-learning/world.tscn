@@ -1,11 +1,16 @@
 [gd_scene format=3 uid="uid://c705avdl56dpf"]
 
 [ext_resource type="PackedScene" uid="uid://d3h0vhg1tvs6d" path="res://player.tscn" id="1_f3sb7"]
+[ext_resource type="Script" uid="uid://ccabtv58t34hn" path="res://world.gd" id="1_fj7yv"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fj7yv"]
 size = Vector2(40, 500)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_v1jvj"]
+size = Vector2(120, 60)
+
 [node name="World" type="Node2D" unique_id=2116438040]
+script = ExtResource("1_fj7yv")
 
 [node name="Player" parent="." unique_id=221396787 instance=ExtResource("1_f3sb7")]
 position = Vector2(163, 283)
@@ -16,3 +21,9 @@ position = Vector2(500, 300)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Wall" unique_id=1427792526]
 shape = SubResource("RectangleShape2D_fj7yv")
+
+[node name="Trigger" type="Area2D" parent="." unique_id=1567210494]
+position = Vector2(180, 100)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Trigger" unique_id=1517826043]
+shape = SubResource("RectangleShape2D_v1jvj")

@@ -1,11 +1,11 @@
 extends Node2D
 
+@onready var player: CharacterBody2D = $Player
+@onready var trigger: Area2D = $Trigger
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	pass # Replace with function body.
+	trigger.body_entered.connect(_on_trigger_body_entered)
 
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
+func _on_trigger_body_entered(body: Node2D) -> void:
+	if body == player:
+		print("角色进入触发区域")
