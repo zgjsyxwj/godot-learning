@@ -20,6 +20,9 @@
 - [Input API](https://docs.godotengine.org/en/stable/classes/class_input.html#class-input-method-get-vector)
   核对输入向量长度限制。以上第二课来源于 2026-09-10 查阅。
 
+- [CanvasLayer API](https://docs.godotengine.org/en/stable/classes/class_canvaslayer.html) 与 [Label API](https://docs.godotengine.org/en/stable/classes/class_label.html)
+  第五课资料，2026-09-14 查阅。核对独立画布层、默认绘制层级和 Label.text。
+
 ## Wisdom (Communities)
 
 - [Godot Forum](https://forum.godotengine.org/)

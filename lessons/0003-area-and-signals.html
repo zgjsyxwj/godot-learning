@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="../assets/course.css">
 </head>
 <body><main>
-<nav aria-label="课程导航"><a href="0002-collide-with-a-wall.html">第二课</a></nav>
+<nav aria-label="课程导航"><a href="0002-collide-with-a-wall.html">第二课</a> · <a href="0004-enter-exit-feedback.html">第四课</a></nav>
 <h1>进入区域，触发事件</h1>
 <p class="lead">给 World 添加一个可穿过的触发区域。角色进入时输出提示，停留时不重复输出，离开后再进入会再次输出。</p>
 <div class="meta"><span>第三课 · 约 20 分钟</span><span>面向有经验的 Java 开发者</span></div>
@@ -119,4 +119,5 @@ func _on_trigger_body_entered(body: Node2D) -> void:
 <p>只改配置：先停止运行，在 Scene 选中 Trigger，再到 Inspector → CollisionObject2D → Collision → Mask 取消第 1 层，保存并预测结果后运行。验证完停止运行，回到同一路径重新选中第 1 层并保存。你应该能解释为什么区域仍可显示，却不再检测到 Player。</p>
 <div class="next"><p><strong>完成后告诉我：</strong>是否能穿过区域、停留时是否只输出一次，以及为何用 body_entered 而不是 area_entered。</p>
 <p>位置与属性参考：<a href="https://docs.godotengine.org/en/stable/tutorials/physics/using_area_2d.html">官方 Area2D 操作说明</a> · <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/debug/overview_of_debugging_tools.html">官方调试工具说明</a>。<br>可选阅读：<a href="https://docs.godotengine.org/en/stable/classes/class_area2d.html">Area2D：body_entered、Monitoring 与 Mask</a> · <a href="https://docs.godotengine.org/en/stable/getting_started/step_by_step/signals.html">官方信号教程</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-private-method-ready">Node 的 ready 生命周期</a>。</p></div>
+<p class="next"><a href="0004-enter-exit-feedback.html">第四课：进入变色，离开恢复</a></p>
 </main><script src="../assets/quiz.js"></script></body></html>
