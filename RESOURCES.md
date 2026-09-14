@@ -23,6 +23,9 @@
 - [CanvasLayer API](https://docs.godotengine.org/en/stable/classes/class_canvaslayer.html) 与 [Label API](https://docs.godotengine.org/en/stable/classes/class_label.html)
   第五课资料，2026-09-14 查阅。核对独立画布层、默认绘制层级和 Label.text。
 
+- [GDScript 格式字符串](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_format_string.html)
+  第六课资料，2026-09-14 查阅。使用 `%d` 将整数计数显示在 Label 中。
+
 ## Wisdom (Communities)
 
 - [Godot Forum](https://forum.godotengine.org/)

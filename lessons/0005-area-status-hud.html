@@ -7,14 +7,14 @@
 <link rel="stylesheet" href="../assets/course.css">
 </head>
 <body><main>
-<nav aria-label="课程导航"><a href="0004-enter-exit-feedback.html">第四课</a> · <a href="../reference/godot-foundations.html">基础速查</a></nav>
+<nav aria-label="课程导航"><a href="0004-enter-exit-feedback.html">第四课</a> · <a href="0006-entry-count.html">第六课</a> · <a href="../reference/godot-foundations.html">基础速查</a></nav>
 <h1>在屏幕上显示区域状态</h1>
 <p class="lead">复用第四课的进入、离开信号。在屏幕左上角显示“区域外”或“区域内”，文字与角色颜色同步变化。</p>
 <div class="meta"><span>第五课 · 约 15 分钟</span><span>Godot 4.7.2 · GDScript</span><span>状态：2026-09-14 已确认完成</span></div>
 <div class="checkpoint"><strong>本课只做一个成果</strong><p>做出一个固定在屏幕上的区域状态提示。新增 CanvasLayer 与 Label，不改变移动规则。完成后由你运行并确认。</p></div>
 
 <h2 id="step-1">1. 先打开第四课的实际项目</h2>
-<p>前四课已由你确认完成。本次只读核对发现：第四课代码在 <code>/Users/sid/Documents/ChatGPT/Godot/godot-learning</code>，当前新工作树中的游戏仍是第三课状态。请继续使用保存项目，不要因课程文件位于新工作树而切换游戏项目。</p>
+<p>前四课已由你确认完成。本次只读核对发现：第四课代码在 <code>/Users/sid/Documents/ChatGPT/Godot/godot-learning</code>，准备第五课时，新工作树中的游戏仍是第三课状态；第六课准备时已同步远端的第五课成果。请继续使用保存项目，不要因课程文件位于新工作树而切换游戏项目。</p>
 <ol>
 <li>在当前 Godot 编辑器左下 <strong>FileSystem（文件系统）→ res://</strong> 双击 <strong>world.tscn</strong>，顶部场景标签应是 <strong>world</strong>。</li>
 <li>在左上 <strong>Scene（场景）</strong> 选中根节点 <strong>World</strong>。确认其下有同级的 <strong>Player、Wall、Trigger</strong>。</li>
@@ -124,4 +124,5 @@ func _on_trigger_body_exited(body: Node2D) -> void:
 <p>用一句话解释：进入回调执行完以后，为什么文字还留在画面上？这也复盘第四课尚未单独验证的“事件与属性值”。</p>
 <div class="next"><p><strong>完成后告诉我：</strong>文字能否按“区域外 → 区域内 → 区域外”变化、再次进入是否正常、文字是否固定在左上角，以及上一题的解释。只有你确认后，才记录第五课完成；测验按钮不会写学习记录。</p>
 <p><a href="0004-enter-exit-feedback.html">返回第四课</a> · <a href="../reference/godot-foundations.html">基础速查</a></p></div>
+<p class="next"><a href="0006-entry-count.html">第六课：统计进入次数</a></p>
 </main><script src="../assets/quiz.js"></script></body></html>
