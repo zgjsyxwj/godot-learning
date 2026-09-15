@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-Hans"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第八课：按 R 重新开始</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main>
+<nav aria-label="课程导航"><a href="0007-entry-goal.html">第七课</a> · <a href="../reference/godot-foundations.html">基础速查</a></nav>
+<h1>按 R 重新开始</h1>
+<p class="lead">在游戏中按一次 R，回到出生点，次数归零，目标重新开始。</p>
+<div class="meta"><span>第八课 · 约 15 分钟</span><span>Godot 4.7.2 · GDScript</span><span>状态：已完成（2026-09-15 用户确认）</span></div>
+<div class="checkpoint"><strong>本课只做一个成果</strong><p>增加“重新开始”输入动作。由你修改原项目的输入映射和 world.gd，并运行验收。</p></div>
+<h2>1. 先核对上一课</h2>
+<p>第六、七课已根据你的反馈记录完成。继续使用 <code>/Users/sid/Documents/ChatGPT/Godot/godot-learning/project.godot</code>；本任务工作树中的游戏文件较旧，不作为本课练习起点。</p>
+<ol><li>按 <strong>F8（Stop，停止）</strong>。Mac 功能键被占用时用 Fn+F8。</li>
+<li>左下 <strong>FileSystem（文件系统）→ res:// → world.tscn</strong>，双击打开。左上 <strong>Scene（场景）</strong> 选中 <strong>World</strong>，确认下方有 Player、Wall、Trigger、HUD，HUD 下有 StatusLabel。</li>
+<li>FileSystem 中双击 <strong>world.gd</strong>，进入中央 <strong>Script（脚本）</strong> 编辑区。</li>
+<li>核对 <code>_on_trigger_body_exited</code>：2026-09-15 读取的保存版本末行仍为 <code>_update_status("区域内")</code>。请改成 <code>_update_status("区域外")</code>。若你已经改正，保留即可。</li></ol>
+<p>先口头预测：旧 World 的 entry_count 为 3。如果创建一个新的 World，它的 entry_count 是多少？关键是<strong>字段属于哪个实例</strong>，以及<strong>初始化何时发生</strong>。不是只看变量写在函数内还是函数外。</p>
+<h2>2. 添加 restart 输入动作</h2>
+<p>保持 world 场景打开、World 选中。输入映射属于整个项目，无需在 Inspector（检查器）中修改节点属性。</p>
+<ol><li>顶部菜单 <strong>Project（项目）→ Project Settings…（项目设置）→ Input Map（输入映射）</strong>。</li>
+<li>在顶部 <strong>Add New Action（添加新动作）</strong> 输入框中输入 <code>restart</code>，点击右侧 <strong>Add（添加）</strong>。若已经有同名动作，直接检查它的绑定。</li>
+<li>找到 <strong>restart</strong> 行，点击该行右侧的 <strong>＋（添加事件）</strong>。</li>
+<li>在事件配置对话框顶部的按键监听区域点击后，按一下 <strong>R</strong>。确认识别结果为 R，点击 <strong>OK（确定）</strong>。</li>
+<li>展开 restart 左侧的小三角，确认下方列出 R。若显示 <strong>R (Physical)</strong>，表示按键的物理位置；本课使用该绑定即可。点击 <strong>Close（关闭）</strong> 返回编辑器。项目设置会保存输入映射。</li></ol>
+<p class="checkpoint"><strong>检查点：</strong>动作名称必须是小写 <code>restart</code>。只新增动作名称而没有绑定 R，游戏不会收到对应按键动作。</p>
+<p>这里复用第一课的输入映射思路：R 是实际按键，restart 是游戏中的意图。以后更换按键，只需修改映射。入口参见 <a href="https://docs.godotengine.org/en/stable/tutorials/inputs/inputevent.html#input-actions">官方文档：输入动作</a>。本机已核对 Project 菜单；事件配置子界面的文字未完成逐项实机核对，若显示不同，以“监听按键 → R → 确认”的操作为准。</p>
+<h2>3. 接收一次按下事件</h2>
+<p>回到 FileSystem → world.gd。在脚本末尾顶格新增以下方法。函数体用一个 Tab，if 内用两个 Tab，错误处理内部用三个 Tab。不要放进已有函数内部。</p>
+<pre><code id="restart-script">func _unhandled_input(event: InputEvent) -&gt; void:
+	if event.is_action_pressed("restart"):
+		var error: Error = get_tree().reload_current_scene()
+		if error != OK:
+			push_error("重新开始失败：%s" % error_string(error))</code></pre>
+<ul><li><code>_unhandled_input</code> 是引擎回调。输入事件未被前面的界面等处理时，引擎会调用它。无需自己调用或连接信号。</li>
+<li><code>event</code> 是这一次输入事件。<code>event.is_action_pressed("restart")</code> 检查它是否匹配 restart 的按下事件；松开不匹配，默认也忽略长按产生的键盘重复事件。</li>
+<li><code>get_tree()</code> 取得管理当前场景的 SceneTree。<code>reload_current_scene()</code> 重新实例化当前场景。</li>
+<li><code>error</code> 是本次调用的返回结果。<code>OK</code> 表示成功；否则 <code>push_error</code> 将可读错误写入调试器。它是局部变量。</li></ul>
+<p>与 Player 每个物理帧读取移动输入不同，这里处理离散事件。不要把这段改成在 <code>_physics_process</code> 里每帧检查 <code>Input.is_action_pressed</code>；持续按住时那样会反复请求重载。参见 <a href="https://docs.godotengine.org/en/stable/classes/class_inputevent.html#class-inputevent-method-is-action-pressed">InputEvent.is_action_pressed</a>。</p>
+<h2>4. 为什么不用逐项归零？</h2>
+<div class="tree" role="img" aria-label="按 R 后旧 World 被新的场景实例替换，新实例初始化次数并更新 HUD">旧 World：次数 3，角色在区域内
+        ↓ R → restart → 场景重载
+新 World：entry_count 初始化为 0
+新 Player：恢复场景保存的位置和原色
+新 World._ready()：连接信号，更新 HUD
+        ↓
+区域外 · 进入次数：0 · 目标未达成</div>
+<p>重载会替换 World 及其场景中的子节点。新实例重新初始化字段，执行 @onready 和 _ready。旧实例上的累计值不被带过去。goal_status 仍然由次数重新计算。参见 <a href="https://docs.godotengine.org/en/stable/classes/class_scenetree.html#class-scenetree-method-reload-current-scene">SceneTree.reload_current_scene</a>。</p>
+<p>只写 <code>entry_count = 0</code> 不会自动恢复 Player 位置、颜色或 Label.text。本课“重新开始”要求整个当前场景回到保存状态，直接重载符合这个语义。项目输入映射仍有效；并非所有游戏数据都会随场景重载清除。</p>
+<p>本课沿用出生点在区域外的场景布局。重载后若出生点与 Trigger 重叠，物理检测会再次触发进入，次数可能立刻变成 1。运行中的位置变化不会自动写回场景文件。</p>
+<h2>5. 运行验收</h2>
+<ol><li>在 Script 编辑区按 <strong>⌘S</strong> 保存（Windows/Linux 用 Ctrl+S）。点击顶部 <strong>world</strong> 场景标签，按 <strong>F6（Run Current Scene，运行当前场景）</strong>，必要时 Fn+F6。必须运行 world，不是 player。</li>
+<li>点击游戏画面取得键盘焦点。初始次数 0、区域外、目标未达成，图标为原色。</li>
+<li>短按 W 进入上方区域，松开；按 S 直到碰撞圆完全离开。先确认退出显示“区域外”，次数保留。</li>
+<li>进入三次。第三次停留在区域内，松开移动键，确认次数 3、目标达成、图标变色。</li>
+<li>短按 R 后松开：游戏仍在运行，角色回出生点，恢复原色；显示区域外、次数 0、目标未达成。</li>
+<li>再次进入，确认次数为 1，停留两秒仍为 1；完全离开后为区域外、次数仍为 1。</li>
+<li>在区域外按 R，再次确认归零。然后长按 R 约两秒，保持 R 时短按 D：角色应能持续移动，不会反复被拉回出生点。最后松开所有键。</li>
+<li>检查 WASD 和斜向移动仍有效。向右撞墙确认阻挡，同时按 W 确认沿墙滑动。最后按 F8，打开底部 <strong>Debugger（调试器）→ Errors（错误）</strong>，确认本次无新增脚本错误。</li></ol>
+<div class="checkpoint"><strong>验收链：</strong>3 达成、区域内 → R → 出生点、原色、0 未达成 → 再进入 1 → 离开保留 1 → R → 0。</div>
+<h2>6. 按现象排查</h2>
+<details><summary>按 R 没反应</summary><p>按顺序检查：游戏画面是否有焦点 → Project Settings → Input Map 的 restart 是否绑定 R → 脚本字符串是否完全一致 → 新回调是否顶格写在 world.gd → 是否保存并运行 world 场景。</p></details>
+<details><summary>次数归零，但位置或颜色没恢复</summary><p>检查是否只手动修改了计数。新方法应调用 reload_current_scene。确认保存的 world.tscn 中 Player 出生点位于 Trigger 外。</p></details>
+<details><summary>重开之后立刻变成 1</summary><p>先松开所有移动键再按 R。若仍出现，检查出生点是否与 Trigger 重叠；碰撞圆半径比图标看起来大。保持原有出生点布局。</p></details>
+<details><summary>长按 R 时反复回到出生点</summary><p>核对使用的是 event.is_action_pressed，且没有把 allow_echo 参数设为 true。不要另加每帧重载代码。</p></details>
+<h2>合上代码，再检索</h2>
+<section class="quiz" data-quiz data-correct="false" data-success="正确。entry_count 是每个 World 实例自己的字段，新实例初始化为 0。" data-retry="函数外的普通 var 属于实例，不等于跨实例共享的全局数据。"><p>entry_count 写在函数外，所以新 World 会继承旧 World 的次数。</p><button data-answer="true">正确</button><button data-answer="false">错误</button><p class="feedback" aria-live="polite"></p></section>
+<section class="quiz" data-quiz data-correct="false" data-success="正确。只改次数不会自动恢复位置、颜色或刷新文字。" data-retry="回想 Label.text 保留上次赋值；它不会自动跟踪 entry_count。"><p>只写 entry_count = 0，就能得到与重载场景相同的全部效果。</p><button data-answer="true">正确</button><button data-answer="false">错误</button><p class="feedback" aria-live="polite"></p></section>
+<section class="quiz" data-quiz data-correct="true" data-success="正确。它匹配按下事件，默认 allow_echo 为 false，松开也不匹配。" data-retry="注意这里检查的是 event，不是每帧读取 Input 的持续按下状态。"><p>本课的 event.is_action_pressed 默认忽略长按产生的键盘重复事件。</p><button data-answer="true">正确</button><button data-answer="false">错误</button><p class="feedback" aria-live="polite"></p></section>
+<div class="next"><p><strong>学习记录：</strong>已于 2026-09-15 根据你的“通过”反馈记录完成。已理解：按 R 重载场景会创建新的 World 实例，普通回调仍作用于同一个实例，因此字段跨调用保留。</p><a href="0007-entry-goal.html">返回第七课</a></div>
+</main><script src="../assets/quiz.js"></script></body></html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-Hans"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第七课：进入三次，达成目标</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main>
+<nav aria-label="课程导航"><a href="0008-restart-scene.html">第八课</a> · <a href="0006-entry-count.html">第六课</a> · <a href="../reference/godot-foundations.html">基础速查</a></nav>
+<h1>进入三次，达成目标</h1>
+<p class="lead">把计数器变成一个小目标：第三次进入时显示“目标达成！”，离开和第四次进入后仍保留提示。</p>
+<div class="meta"><span>第七课 · 约 10 分钟</span><span>Godot 4.7.2 · GDScript</span><span>状态：已完成（2026-09-15 用户确认）</span></div>
+<div class="checkpoint"><strong>本课只做一个成果</strong><p>在已有 HUD 增加目标是否达成的提示。继续自由移动和累计次数；停止后重新运行，次数归零、目标重新开始。游戏代码由你动手修改。</p></div>
+<h2>1. 核对起点</h2>
+<ol><li>打开 <code>godot-learning/project.godot</code>。按 <strong>F8（Stop，停止）</strong> 停止游戏；Mac 功能键被占用时用 Fn+F8。</li>
+<li>左下 <strong>FileSystem（文件系统）→ res:// → world.tscn</strong>，双击打开。左上 <strong>Scene（场景）</strong> 中确认 World 下有 Player、Trigger 和 HUD，HUD 下有 StatusLabel。</li>
+<li>FileSystem 中双击 <strong>world.gd</strong>，中央进入 <strong>Script（脚本）</strong> 编辑区。本课只编辑这个脚本。</li>
+<li>你当前代码在两个回调中都保留了一行旧赋值：<code>status_label.text = "区域内"</code> 或 <code>"区域外"</code>。它们立即被带次数的新赋值覆盖。先删除这两行旧赋值。</li></ol>
+<h2>2. 完成状态由次数决定</h2>
+<div class="tree" role="img" aria-label="次数少于三时未完成，大于等于三时完成">次数 0、1、2 → 目标未达成
+次数 3、4、5… → 目标达成！
+停止后重新运行 → 次数 0 → 目标未达成</div>
+<p>使用 <code>entry_count >= 3</code>，而不是 <code>== 3</code>。后者在第四次进入时会变成 false。本课次数只增加，因此不必再保存一个完成布尔字段：每次显示时都可以从次数算出结果。</p>
+<p>“目标已达成”是当前状态。它与“刚刚达成时发一次奖励”不同；本课只显示状态，不增加奖励事件。</p>
+<h2>3. 写一个统一更新 HUD 的函数</h2>
+<p>在 world.gd 的 <code>extends Node2D</code> 下方、<code>var entry_count</code> 上方，顶格新增目标常量：</p>
+<pre><code>const TARGET_ENTRIES: int = 3</code></pre>
+<p>它类似 Java 的常量，表示本课固定规则。再到脚本末尾，顶格新增下面的函数。函数体缩进一个 Tab，if 内再缩进一个 Tab：</p>
+<pre><code>func _update_status(area_status: String) -&gt; void:
+	var goal_status: String = &quot;目标未达成&quot;
+	if entry_count &gt;= TARGET_ENTRIES:
+		goal_status = &quot;目标达成！&quot;
+	status_label.text = &quot;%s · 进入次数：%d · %s&quot; % [area_status, entry_count, goal_status]</code></pre>
+<p><code>_update_status</code> 是我们自己定义的普通方法，不是引擎回调。名字以下划线开头不会使它自动执行；后面要主动调用它。</p>
+<p><code>area_status</code> 接收调用方传来的“区域内”或“区域外”。局部变量 <code>goal_status</code> 每次重新计算显示文案，不负责累计次数。<code>entry_count</code> 仍由 World 实例保存。</p>
+<p>格式字符串里的三个占位符与右侧数组按顺序对应：<code>%s</code> 区域文字、<code>%d</code> 次数、<code>%s</code> 目标文字。参见 <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_format_string.html#multiple-placeholders">官方文档：多个占位符</a>。</p>
+<h2>4. 在三个位置调用它</h2>
+<ol><li>在 <code>_ready()</code> 中，将原来的整行 <code>status_label.text = ...</code> 替换为 <code>_update_status("区域外")</code>。保留前面的两条信号连接。</li>
+<li>在 <code>_on_trigger_body_entered</code> 的 Player 分支中，将文字赋值替换为 <code>_update_status("区域内")</code>。它必须位于 <code>entry_count += 1</code> 之后。保留日志和变色。</li>
+<li>在 <code>_on_trigger_body_exited</code> 的 Player 分支中，将文字赋值替换为 <code>_update_status("区域外")</code>。保留恢复原色和日志，退出不修改次数。</li></ol>
+<p class="checkpoint"><strong>检查点：</strong>整个脚本中只剩一处 <code>status_label.text =</code>，位于新函数中。三个调用点共用同一个显示规则，因此离开时也不会丢失目标提示。</p>
+<details><summary>动手后展开：完整 world.gd 核对版</summary><pre><code id="complete-script">extends Node2D
+
+const TARGET_ENTRIES: int = 3
+var entry_count: int = 0
+
+@onready var player: CharacterBody2D = $Player
+@onready var trigger: Area2D = $Trigger
+@onready var original_modulate: Color = player.modulate
+@onready var status_label: Label = $HUD/StatusLabel
+
+func _ready() -&gt; void:
+	trigger.body_entered.connect(_on_trigger_body_entered)
+	trigger.body_exited.connect(_on_trigger_body_exited)
+	_update_status(&quot;区域外&quot;)
+
+func _on_trigger_body_entered(body: Node2D) -&gt; void:
+	if body == player:
+		entry_count += 1
+		print(&quot;角色进入触发区域&quot;)
+		player.modulate = Color(1.0, 0.45, 0.45, 1.0)
+		_update_status(&quot;区域内&quot;)
+
+func _on_trigger_body_exited(body: Node2D) -&gt; void:
+	if body == player:
+		player.modulate = original_modulate
+		print(&quot;角色离开触发区域&quot;)
+		_update_status(&quot;区域外&quot;)
+
+func _update_status(area_status: String) -&gt; void:
+	var goal_status: String = &quot;目标未达成&quot;
+	if entry_count &gt;= TARGET_ENTRIES:
+		goal_status = &quot;目标达成！&quot;
+	status_label.text = &quot;%s · 进入次数：%d · %s&quot; % [area_status, entry_count, goal_status]</code></pre></details>
+<h2>5. 运行并验证边界</h2>
+<ol><li>在脚本编辑区按 <strong>⌘S</strong> 保存（Windows/Linux 用 Ctrl+S）。确认无红色语法错误。点击顶部 <strong>world</strong> 场景标签，按 <strong>F6（Run Current Scene，运行当前场景）</strong>，必要时 Fn+F6。</li>
+<li>点击游戏画面取得键盘焦点。初始应显示“区域外 · 进入次数：0 · 目标未达成”。</li>
+<li>短按 W，每次约 0.1 秒，进入上方区域后松开；再按 S，直到整个碰撞圆离开。重复两轮，次数为 2，目标仍未达成。</li>
+<li>第三次进入后松开按键。应显示“区域内 · 进入次数：3 · 目标达成！”。停留两秒，次数仍为 3，图标保持变色。</li>
+<li>完全离开：显示“区域外 · 进入次数：3 · 目标达成！”，图标恢复原色。</li>
+<li>第四次进入：次数为 4，仍显示“目标达成！”。你仍可以移动。</li>
+<li>退回出生点附近，按 D 撞墙确认停住，保持 D 短按 W 确认沿墙滑动；松开按键停止。</li>
+<li>按 F8 停止，再按 F6 运行。确认回到次数 0、目标未达成。最后 F8 停止，在编辑器底部 <strong>Debugger（调试器）→ Errors（错误）</strong> 检查本次运行无新增错误。</li></ol>
+<div class="checkpoint"><strong>验收链：</strong>2 未达成 → 3 达成 → 停留仍为 3 → 离开仍达成 → 4 仍达成 → 重开 0 未达成。</div>
+<h2>6. 按现象定位问题</h2>
+<details><summary>第四次进入又显示未达成</summary><p>检查条件是否误写成 <code>==</code>。本课要求达到或超过目标，使用 <code>>=</code>。</p></details>
+<details><summary>离开后完成提示消失</summary><p>检查退出回调是否仍在直接写旧 text；它也需要调用 _update_status。确保调用之后没有旧赋值覆盖结果。</p></details>
+<details><summary>第三次还未完成，第四次才完成</summary><p>进入回调必须先更新次数，再调用显示函数。也要检查条件是否误写成 <code>></code>。</p></details>
+<details><summary>新增函数没有执行或找不到函数</summary><p>确认名称一致，三个位置都主动调用它；函数声明顶格，不要放进其他函数内部。无需连接新信号。</p></details>
+<h2>合上代码，再检索</h2>
+<section class="quiz" data-quiz data-correct="false" data-success="正确。第四次为 4，必须用 >= 才继续满足条件。" data-retry="试着把 4 代入 == 3。"><p>用 entry_count == 3 判断，可以让第四次进入后仍显示达成。</p><button data-answer="true">正确</button><button data-answer="false">错误</button><p class="feedback" aria-live="polite"></p></section>
+<section class="quiz" data-quiz data-correct="false" data-success="正确。这个自定义方法需要主动调用。" data-retry="只有约定的引擎回调才会在相应时机被引擎调用。"><p>函数名以下划线开头，Godot 就会自动调用它。</p><button data-answer="true">正确</button><button data-answer="false">错误</button><p class="feedback" aria-live="polite"></p></section>
+<section class="quiz" data-quiz data-correct="true" data-success="正确。次数和完成结果不变，但区域文字改变了。" data-retry="显示包含区域、次数和目标三部分。"><p>离开时次数没变，也需要刷新 HUD，才能把区域内改成区域外。</p><button data-answer="true">正确</button><button data-answer="false">错误</button><p class="feedback" aria-live="polite"></p></section>
+<p>用一句话解释：为什么 goal_status 可以是局部变量，而 entry_count 要放在函数外？</p>
+<div class="next"><p><strong>学习记录：</strong>已于 2026-09-15 根据你的反馈记录完成。已说明局部变量与实例字段的访问范围；注意 entry_count 属于每个 World 实例，并非全局变量。</p><a href="0008-restart-scene.html">开始第八课：按 R 重新开始</a> · <a href="0006-entry-count.html">返回第六课</a> · <a href="../reference/godot-foundations.html">基础速查</a></div>
+</main><script src="../assets/quiz.js"></script></body></html>

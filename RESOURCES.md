@@ -26,9 +26,18 @@
 - [GDScript 格式字符串](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_format_string.html)
   第六课资料，2026-09-14 查阅。使用 `%d` 将整数计数显示在 Label 中。
 
+- [GDScript 格式字符串：多个占位符](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_format_string.html#multiple-placeholders)
+  第七课资料，2026-09-15 查阅。将区域、次数与目标文案按顺序填入统一 HUD 模板。
+
 ## Wisdom (Communities)
 
 - [Godot Forum](https://forum.godotengine.org/)
   Godot 官方社区列出的问答论坛。用于带着最小复现项目寻求真实项目经验。
 - [Godot Community](https://godotengine.org/community/)
   官方维护的社区入口清单。用于寻找 Discord、论坛与本地活动。
+
+## 第八课：重新开始
+
+- [SceneTree.reload_current_scene](https://docs.godotengine.org/en/stable/classes/class_scenetree.html#class-scenetree-method-reload-current-scene)：用新实例替换当前场景及错误返回值。
+- [InputEvent.is_action_pressed](https://docs.godotengine.org/en/stable/classes/class_inputevent.html#class-inputevent-method-is-action-pressed)：按下匹配与默认忽略键盘重复事件。
+- [Using InputEvent](https://docs.godotengine.org/en/stable/tutorials/inputs/inputevent.html)：输入映射入口与 _unhandled_input 回调。以上于 2026-09-15 查阅，并用本机 Godot 4.7.2 验证本课示例。
