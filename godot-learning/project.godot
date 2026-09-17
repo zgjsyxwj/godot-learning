@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="godot-learning"
-run/main_scene="uid://c705avdl56dpf"
+run/main_scene="uid://ba35rbrj3b5uy"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
